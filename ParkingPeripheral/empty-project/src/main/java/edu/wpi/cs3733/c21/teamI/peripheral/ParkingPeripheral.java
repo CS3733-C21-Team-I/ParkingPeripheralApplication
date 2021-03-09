@@ -22,7 +22,7 @@ public class ParkingPeripheral {
     this.assignedFloor = null;
 
     input.setController(this);
-    input.initialize(Main.comPorts);
+    input.initialize(new String[] {Main.comPorts});
   }
 
   public void assignSensors(int numSensors, Floor floor) {

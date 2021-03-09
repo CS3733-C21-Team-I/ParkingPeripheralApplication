@@ -10,10 +10,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.Enumeration;
-import java.util.List;
 
-public class ParkingSerialInput implements SerialPortEventListener {
+public class ArduinoSlipSerial implements SerialPortEventListener, SlipSerialInterface {
 
   private ParkingPeripheral controller;
 
@@ -31,6 +32,21 @@ public class ParkingSerialInput implements SerialPortEventListener {
 
   public void setController(ParkingPeripheral controller) {
     this.controller = controller;
+  }
+
+  @Override
+  public DateTimeFormatter getDateFormat() {
+    return DateTimeFormatter.ofPattern("dd/MM/yyyy");
+  }
+
+  @Override
+  public DateTimeFormatter getTimeFormat() {
+    return DateTimeFormatter.ofPattern("hh:mma");
+  }
+
+  @Override
+  public DecimalFormat getCostFormat() {
+    return new DecimalFormat("$00.00");
   }
 
   public void initialize(String[] comPorts) {
@@ -75,47 +91,38 @@ public class ParkingSerialInput implements SerialPortEventListener {
     }
   }
 
-  public synchronized void serialEvent(SerialPortEvent oEvent) {
-    if (oEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
-      try {
-        String inputLine = null;
-        if (input.ready()) {
-          inputLine = input.readLine();
-
-          inputLine = inputLine.replaceAll("[^A-Za-z0-9 ]", "");
-          System.out.println(inputLine);
-
-          String[] input = inputLine.split(" ");
-          if (!input[0].equals("")) controller.handleSlotUpdate(input[0], input[1].equals("1"));
-        }
-
-      } catch (Exception e) {
-        System.err.println(e.toString());
-      }
-    }
-    // Ignore all the other eventTypes, but you should consider the other ones.
-  }
+  public synchronized void serialEvent(SerialPortEvent oEvent) {}
 
   /**
    * Connects sensors to the Serial Peripheral takes in a list of 4 char codes to be used in
-   * communication Protocol SOH, code1 char 1-4, GS, code2 char 1-4, GS, ..., EOT
-   *
-   * @param parkingCodes
+   * communication Protocol SOH, date char[10], GS, startTime char[7], GS, endTime char[7], GS, cost
+   * char[6], GS, id char[5], EOT
    */
-  public void connectSensors(List<String> parkingCodes) {
+  public void printTicket(
+      String slotCode, String date, String startTime, String endTime, String cost, String id) {
+    if (date.length() != 10
+        || slotCode.length() != 4
+        || startTime.length() != 7
+        || endTime.length() != 7
+        || cost.length() != 6
+        || id.length() != 5) {
+      throw new IllegalArgumentException("Argument of wrong length to printTicket");
+    }
+
     try {
       output.write(1);
-      for (int i = 0; i < parkingCodes.size(); i++) {
-        if (parkingCodes.get(i).length() != 4)
-          throw new IllegalArgumentException("Passed Parking Code of not lenght 4");
-        output.write(parkingCodes.get(i).getBytes(StandardCharsets.UTF_8));
-        System.out.println("Writing: " + parkingCodes.get(i));
-        if (i == parkingCodes.size() - 1) {
-          output.write(4);
-        } else {
-          output.write(29);
-        }
-      }
+      output.write(slotCode.getBytes(StandardCharsets.UTF_8));
+      output.write(29);
+      output.write(date.getBytes(StandardCharsets.UTF_8));
+      output.write(29);
+      output.write(startTime.getBytes(StandardCharsets.UTF_8));
+      output.write(29);
+      output.write(endTime.getBytes(StandardCharsets.UTF_8));
+      output.write(29);
+      output.write(cost.getBytes(StandardCharsets.UTF_8));
+      output.write(29);
+      output.write(id.getBytes(StandardCharsets.UTF_8));
+      output.write(4);
     } catch (IOException e) {
       e.printStackTrace();
     }
