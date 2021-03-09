@@ -5,9 +5,11 @@ import edu.wpi.cs3733.c21.teamI.database.ParkingPeripheralServerManager;
 import edu.wpi.cs3733.c21.teamI.parking.Lot;
 import edu.wpi.cs3733.c21.teamI.peripheral.ParkingPeripheral;
 import edu.wpi.cs3733.c21.teamI.peripheral.PeripheralSlipManager;
+import edu.wpi.cs3733.c21.teamI.view.SlipPayController;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import javafx.application.Application;
 
 public class Main {
 
@@ -40,6 +42,10 @@ public class Main {
       //      input.printTicket("03/09/2021", "04:45AM", "05:45AM", "$05.50", "10001");
       //      System.out.println("Done");
 
+    } else if (Arrays.asList(args).contains("payTicket")) {
+      DatabaseManager.initPeripheralDatabaseManagers();
+
+      Application.launch(SlipPayController.class);
     }
   }
 }
