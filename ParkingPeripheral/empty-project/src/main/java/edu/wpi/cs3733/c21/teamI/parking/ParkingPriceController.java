@@ -6,6 +6,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -14,13 +15,10 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class ParkingPriceController extends Application {
-  Map<Integer, Double> map = ParkingSlip.pricingMap;
-  Iterator<Map.Entry<Integer, Double>> itr = map.entrySet().iterator();
-
-
   class HBoxCell extends HBox {
     Label label = new Label();
     Button button = new Button();
@@ -29,16 +27,19 @@ public class ParkingPriceController extends Application {
       super();
 
       label.setText(hours);
+      label.setStyle("-fx-font-weight: bold");
       label.setMaxWidth(Double.MAX_VALUE);
       HBox.setHgrow(label, Priority.ALWAYS);
+      HBox.setHgrow(button, Priority.ALWAYS);
 
       button.setText(price);
+
+      button.setStyle("-fx-cursor: hand;-fx-background-color: #012D5A;");
+      button.setTextFill(Color.WHITE);
       button.setOnAction(
           new EventHandler<ActionEvent>() {
 
-            /**
-             * Implement what you want to be returned on click here
-             */
+            /** Implement what you want to be returned on click here */
             @Override
             public void handle(ActionEvent event) {
               System.out.println(button.getText());
@@ -52,7 +53,20 @@ public class ParkingPriceController extends Application {
   public Parent createContent() {
     BorderPane layout = new BorderPane();
 
+    Label priceTag = new Label("Price");
+
+    Label hoursTag = new Label("Minutes");
+    priceTag.setStyle("-fx-font-weight: bold");
+    hoursTag.setStyle("-fx-font-weight: bold");
+
+    HBox hBox = new HBox(hoursTag, priceTag);
+    hBox.setHgrow(priceTag, Priority.ALWAYS);
+
+    hBox.setMargin(hoursTag, new Insets(0, 380, 0, 0));
+
+    layout.setTop(hBox);
     List<HBoxCell> list = new ArrayList<>();
+
     for (Map.Entry<Integer, Double> entry : ParkingSlip.pricingMap.entrySet()) {
       list.add(new HBoxCell(String.valueOf(entry.getKey()), String.valueOf(entry.getValue())));
     }
@@ -60,9 +74,7 @@ public class ParkingPriceController extends Application {
     ListView<HBoxCell> listView = new ListView<HBoxCell>();
     ObservableList<HBoxCell> myObservableList = FXCollections.observableList(list);
     listView.setItems(myObservableList);
-
     layout.setCenter(listView);
-
     return layout;
   }
 
@@ -70,7 +82,7 @@ public class ParkingPriceController extends Application {
   public void start(Stage primaryStage) throws Exception {
     primaryStage.setScene(new Scene(createContent()));
     primaryStage.setWidth(500);
-    primaryStage.setHeight(200);
+    primaryStage.setHeight(300);
     primaryStage.show();
   }
 
